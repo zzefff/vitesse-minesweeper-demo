@@ -23,7 +23,7 @@ const directions = [
   [0, 1],
 ]
 
-const state = reactive(Array.from({
+const state = ref(Array.from({
   length: HEIGHT,
 }, (_, y) => Array.from({ length: WIDTH }, (_, x): BlockState => {
   return {
@@ -41,25 +41,25 @@ function getSiblings(block: BlockState) {
     const x2 = dx + block.x
     const y2 = dy + block.y
     if (x2 < 0 || x2 >= WIDTH || y2 < 0 || y2 >= HEIGHT) return undefined
-    return state[y2][x2]
+    return state.value[y2][x2]
   }).filter(Boolean) as BlockState[]
 }
 
-function generateMines() {
-  for (const row of state) {
+function generateMines(initBlock: BlockState) {
+  for (const row of state.value) {
     for (const block of row) {
-      // if (Math.abs(initBlock.x - block.x) <= 1)
-      //   continue
-      // if (Math.abs(initBlock.y - block.y) <= 1)
-      //   continue
-      block.mine = Math.random() < 0.2
+      if (Math.abs(initBlock.x - block.x) <= 1)
+        continue
+      if (Math.abs(initBlock.y - block.y) <= 1)
+        continue
+      block.mine = Math.random() < 0.1
     }
   }
   updateNumbers()
 }
 
 function updateNumbers() {
-  state.forEach((row, y) => {
+  state.value.forEach((row, y) => {
     row.forEach((block, x) => {
       if (block.mine) return
       getSiblings(block).forEach((b) => {
@@ -81,24 +81,41 @@ function expandZero(block: BlockState) {
 }
 
 let mineGenerated = false
-const dev = true
+const dev = false
 
 function getBlockClass(block: BlockState) {
   if (!block.revealed) return 'bg-red'
   return block.mine ? 'bg-red' : ''
 }
 
-if (!mineGenerated) {
-  generateMines()
-  mineGenerated = true
+function onRightClick(block: BlockState) {
+  if (block.revealed) return
+  block.flagged = !block.flagged
 }
 
 function onClick(block: BlockState) {
+  if (!mineGenerated) {
+    generateMines(block)
+    mineGenerated = true
+  }
+
   block.revealed = true
   if (block.mine)
     alert('u dead mf!')
   expandZero(block)
 }
+
+function checkState() {
+  const blocks = state.value.flat()
+  if (blocks.every(block => block.flagged || block.revealed)) {
+    if (blocks.some(block => block.flagged && !block.mine))
+      alert('fuck lose')
+    else
+      alert('not bad')
+  }
+}
+
+watchEffect(checkState)
 
 </script>
 
@@ -122,13 +139,15 @@ function onClick(block: BlockState) {
         hover:bg-gray
         :class="getBlockClass(item)"
         @click="onClick(item)"
+        @contextmenu.prevent="onRightClick(item)"
       >
-        <span v-if="item.revealed">
+        <span v-if="item.flagged">
+          🚩
+        </span>
+        <span v-else-if="item.revealed">
           {{ item.mine ? '💣' : (item.adjacentMines || '') }}
         </span>
-        <span v-else-if="!item.revealed || dev">
-          {{ item.mine ? '💣' : item.adjacentMines }}
-        </span>
+        <span v-else-if="!item.revealed || dev" />
       </button>
     </div>
   </div>
