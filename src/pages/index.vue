@@ -1,13 +1,6 @@
 <script setup lang="ts">
-
-interface BlockState {
-  x: number
-  y: number
-  mine: boolean
-  revealed: boolean
-  flagged: boolean
-  adjacentMines: number
-}
+import type { BlockState } from '~/types'
+import Block from '~/components/Block.vue'
 
 const WIDTH = 10
 const HEIGHT = 10
@@ -81,12 +74,6 @@ function expandZero(block: BlockState) {
 }
 
 let mineGenerated = false
-const dev = false
-
-function getBlockClass(block: BlockState) {
-  if (!block.revealed) return 'bg-red'
-  return block.mine ? 'bg-red' : ''
-}
 
 function onRightClick(block: BlockState) {
   if (block.revealed) return
@@ -130,25 +117,13 @@ watchEffect(checkState)
       justify-center
       items-center
     >
-      <button
+      <Block
         v-for="item in row"
         :key="item.x"
-        w-10
-        h-10
-        border
-        hover:bg-gray
-        :class="getBlockClass(item)"
+        :block="item"
         @click="onClick(item)"
         @contextmenu.prevent="onRightClick(item)"
-      >
-        <span v-if="item.flagged">
-          🚩
-        </span>
-        <span v-else-if="item.revealed">
-          {{ item.mine ? '💣' : (item.adjacentMines || '') }}
-        </span>
-        <span v-else-if="!item.revealed || dev" />
-      </button>
+      />
     </div>
   </div>
 </template>
