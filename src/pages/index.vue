@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { BlockState } from '~/types'
-import Block from '~/components/Block.vue'
+import { isDev, toggleDev } from '~/composables'
 
 const WIDTH = 10
 const HEIGHT = 10
+const CHANCE = 0.2
 
 const directions = [
   [1, 1],
@@ -45,7 +46,7 @@ function generateMines(initBlock: BlockState) {
         continue
       if (Math.abs(initBlock.y - block.y) <= 1)
         continue
-      block.mine = Math.random() < 0.1
+      block.mine = Math.random() < CHANCE
     }
   }
   updateNumbers()
@@ -109,6 +110,12 @@ watchEffect(checkState)
 <template>
   <div>
     Mine Sweeper
+
+    <button
+      @click="toggleDev"
+    >
+      isDev: {{ isDev }}
+    </button>
 
     <div
       v-for="(row, y) in state"

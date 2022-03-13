@@ -24,7 +24,7 @@ function getBlockClass(block: BlockState) {
     <span v-else-if="block.revealed">
       {{ block.mine ? '💣' : (block.adjacentMines || '') }}
     </span>
-    <span v-else-if="!block.revealed || isDev">
+    <span v-else-if="isDev">
       {{ block.mine ? '💣' : block.adjacentMines }}
     </span>
   </button>
